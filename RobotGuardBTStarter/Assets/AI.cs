@@ -45,28 +45,106 @@ public class AI : MonoBehaviour
     {
         if(col.gameObject.tag == "bullet")              //se colidir com a bala, toma dano .
         {
-            health -= 10;                               //tira 10 de vida por bla.
+            health -= 10;                               //tira 10 de vida por bala.
         }
     }
 
-    [Task]
-    public void PickRandomDestination()    
+    [Task]                                    //faz parte de um comando a ser concluido.
+    public void PickRandomDestination()                                                       //metodo que da um destino aleatorio.
     {
         Vector3 dest = new Vector3(Random.Range(-100, 100), 0, Random.Range(-100, 100));      //dest é um ponto aleatorio dentro dos parametros.
         agent.SetDestination(dest);                                                           //o destino é o "dest".
-        Task.current.Succeed();                                                               //sucesso na task ao termina-la.
+        Task.current.Succeed();                                                               //task concluida.
     }
 
-    [Task]
-    public void MoveToDestination()
+    [Task]                                                                            //faz parte de um comando a ser concluido.
+    public void MoveToDestination()                                                   //Metodo que faz mover ao destino.
     {
         if(Task.isInspected)                                                          //se a task foi pega
             Task.current.debugInfo = string.Format("t={0:0.00}", Time.time);          //mostra o tempo que estao sendo executado
         if(agent.remainingDistance <= agent.stoppingDistance && !agent.pathPending)   //pega a distancia do andada pelo anget e se for menor que a distancia pra ele parar a task é bem sucedida
         {
-            Task.current.Succeed();
+            Task.current.Succeed();                                                   //task concluida.
         }
 
     }
+    
+    [Task]                                                                            //faz parte de um comando a ser concluido.
+    public void PickDestination(int x, int z)                                         //metodo que da o destino que precisa de paremetros.
+    {
+        Vector3 dest = new Vector3(x, 0, z);                                          //novo destino é o paremetro colocado na BT.
+        agent.SetDestination(dest);                                                   //falando que o dest é o destino pro agent.
+        Task.current.Succeed();                                                       //task concluida.
+    }
+   
+    [Task]                                                                            //faz parte de um comando a ser concluido.
+    public void TargetPlayer()                                                        //player que vai ser targetado.
+    {
+        target = player.transform.position;                                           //o target é o player.
+        Task.current.Succeed();                                                       //task concluida.
+    } 
+    
+   
+
+    [Task]
+    bool Turn(float angle)                                                                                      //metodo turn com paremetro de algulo.
+    {
+        var p = this.transform.position + Quaternion.AngleAxis(angle, Vector3.up) * this.transform.forward;     //p é a posição para realizar o turn.
+        target = p;                                                                                             //target é o p.
+        return true;                                                                                            // retorna verdadeiro.
+    }
+
+
+    [Task]                                                                                                                                      //faz parte de um comando a ser concluido.
+    public void LookAtTarget()                                                                                                                  //metodo para detectar o target.
+    {
+        Vector3 direction = target - this.transform.position;                                                                                   //a direção do vertor é o targt.
+        this.transform.rotation = Quaternion.Slerp(this.transform.rotation, Quaternion.LookRotation(direction), Time.deltaTime * rotSpeed);     //rotação do ai para virar para o player.
+       
+        if (Task.isInspected)                                                                                                                   //se a task foi pega.
+            Task.current.debugInfo = string.Format("anfle={0}", Vector3.Angle(this.transform.forward, direction));                              //ativa a task no ai.
+       
+        if(Vector3.Angle(this.transform.forward, direction) < 5.0f)                                                                             //se o angulo for menor que 5.
+        {
+            Task.current.Succeed();                                                                                                             //task concluida.
+        }
+    }
+
+    [Task]                                                                            //faz parte de um comando a ser concluido.
+    public bool Fire()                                                                //metodo para atirar.
+    {
+        GameObject bullet = GameObject.Instantiate(bulletPrefab, bulletSpawn.transform.position, bulletSpawn.transform.rotation);     //Instancia a bala.       
+        bullet.GetComponent<Rigidbody>().AddForce(bullet.transform.forward * 2000);                                                   //aplica força na bala.
+
+        return true;                                                                                                                  //se atirou retonar verdadeiro.
+    }
+
+    [Task]
+    bool SeePlayer()                                                               //detecta o Player.
+    {
+        Vector3 distance = player.transform.position - this.transform.position;    //distancia do player.
+        RaycastHit hit;                                                            //cria um raycast.
+        bool seeWall = false;
+        Debug.DrawRay(this.transform.position, distance, Color.red);               //desenha um raycast vermelho.
+       
+        if (Physics.Raycast(this.transform.position, distance, out hit))           //Pega a distacia do raycast.
+        {
+            if(hit.collider.gameObject.tag == "wall")                              //se o raycast colidir com a tag wall.
+            {
+                seeWall = true;                                                    //retorna verdadeiro no seeWall.
+            }
+        }
+       
+        if (Task.isInspected)                                                      //se a task foi pega.
+            Task.current.debugInfo = string.Format("wall={0}", seeWall);           //ativa a task no ai.
+
+        if (distance.magnitude < visibleRange && !seeWall)                         //se o see wall for false o estiver com visão.
+            return true;                                                           //retonar verdadeiro.
+        else                                                                       //se não.
+            return false;                                                          //retorna falso.
+
+    }
+    
+   
 }
 
