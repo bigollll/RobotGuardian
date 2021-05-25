@@ -119,7 +119,7 @@ public class AI : MonoBehaviour
         return true;                                                                                                                  //se atirou retonar verdadeiro.
     }
 
-    [Task]
+    [Task]                                                                         //faz parte de um comando a ser concluido.
     bool SeePlayer()                                                               //detecta o Player.
     {
         Vector3 distance = player.transform.position - this.transform.position;    //distancia do player.
@@ -144,7 +144,20 @@ public class AI : MonoBehaviour
             return false;                                                          //retorna falso.
 
     }
-    
-   
+
+    [Task]                                                 //faz parte de um comando a ser concluido.
+    public bool IsHealthLessThan(float health)             //parametro float passado para o "se a vida for menor que".
+    {
+        return this.health < health;                       //retorna que a vida é menor que a propria vida, desencadenado outra função posteriormente.
+    }
+
+    [Task]                                 //faz parte de um comando a ser concluido.
+    public bool Explode()                  //metodo criado para Destruir o oponente.
+    {
+        Destroy(healthBar.gameObject);     //destroi a barra de vida.
+        Destroy(this.gameObject);          //destroi o proprio player.
+        return true;                       //retorna verdadeiro.
+    }
+
 }
 
